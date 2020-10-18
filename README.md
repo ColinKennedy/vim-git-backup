@@ -3,6 +3,7 @@
  - e.g. check if git has "-C" flag
  - if `diff` command is executable, grep, tail, wc, etc.
  - if ghistory has sed / tac available, etc.
+- Add documentation for everything
 
 # vim-git-backup
 A top notch backup mechanism for Vim. Maintain copies of your files,

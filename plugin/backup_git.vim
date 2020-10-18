@@ -1,3 +1,14 @@
+if system('git') !~ '\C[-C'  " If there is not `git -C` option
+    echo 'Git is too old to run vim-git-backup.'
+    finish
+endif
+
+if get(g:, 'vim_git_backup_loaded', '0') == '1'
+    " Prevent this plugin from being loaded more than once in a single Vim session
+    finish
+endif
+
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Commands and Auto-Commands
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -53,29 +64,29 @@ function! s:BackupCurrentFile()
     let l:backup_file = g:custom_backup_dir . l:file  " e.g. '~/.vim_custom_backups/tmp/foo.txt'
     let l:relative_backup_file = vim_git_backups#filer#strip_mount(l:file)  " e.g. 'tmp/foo.txt'
 
-    call vim_git_backups#filer#copy(l:file, g:custom_backup_dir)
-
-    let commands = []
-
-    call add(commands, vim_git_backup#git#Add(l:relative_backup_file))
-    call add(commands, vim_git_backup#git#commit(vim_git_backup#git_helper#get_commit_message(l:file)))
-    call add(commands, vim_git_backup#git#AddNote(vim_git_backup#git_helper#get_recommended_note(l:backup_file, l:file)))
-
-    let tag = vim_git_backup#git_helper#get_recommended_tag()
-
-    if !isempty(tag)
-        call add(commands, vim_git_backup#git#AddTag(tag))
-    endif
-
-    let cmd = join(commands, ";")
-
-    if exists("*job_start")
-        " Run the command asynchronously (Vim 8+ only)
-        call job_start([g:custom_backup_shell_executable, '-c', cmd])
-    else
-        " Run the command synchronously
-        call system(cmd)
-    endif
+    " call vim_git_backups#filer#copy(l:file, g:custom_backup_dir)
+    "
+    " let commands = []
+    "
+    " call add(commands, vim_git_backup#git#Add(l:relative_backup_file))
+    " call add(commands, vim_git_backup#git#commit(vim_git_backup#git_helper#get_commit_message(l:file)))
+    " call add(commands, vim_git_backup#git#AddNote(vim_git_backup#git_helper#get_recommended_note(l:backup_file, l:file)))
+    "
+    " let tag = vim_git_backup#git_helper#get_recommended_tag()
+    "
+    " if !isempty(tag)
+    "     call add(commands, vim_git_backup#git#AddTag(tag))
+    " endif
+    "
+    " let cmd = join(commands, ";")
+    "
+    " if exists("*job_start")
+    "     " Run the command asynchronously (Vim 8+ only)
+    "     call job_start([g:custom_backup_shell_executable, '-c', cmd])
+    " else
+    "     " Run the command synchronously
+    "     call system(cmd)
+    " endif
 endfunction
 
 
@@ -171,3 +182,5 @@ function! GHistory()
 
     call fzf#run({"source": l:files, "sink": "e"})
 endfunction
+
+let g:vim_git_backup_loaded = '1'
