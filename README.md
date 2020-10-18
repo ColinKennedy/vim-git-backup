@@ -1,5 +1,5 @@
 # vim-git-backup
-A top notch backup mechanism for Vim. Maintain copies of your files,
+A top notch file backup mechanism for Vim. Maintain copies of your files,
 anywhere, and never lose anything again.
 
 
