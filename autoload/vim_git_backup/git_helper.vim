@@ -1,3 +1,11 @@
+" Find the root git folder, assuming `path` is on or inside of a git repository.
+"
+" Args:
+"     path (str): A file or folder within a git repository.
+"
+" Returns:
+"     str: The found git repository root. If not root was found, return an empty string.
+"
 function! s:GetGitRoot(path)
     " Note: This function only works on Linux!
     let l:parts = split(a:path, '/')
@@ -18,11 +26,22 @@ function! s:GetGitRoot(path)
 endfunction
 
 
-function! s:RunFromFolder(root, command)
-	return 'git -C ' . a:root . ' ' . a:command
-endfunction
-
-
+" Create a recommended message for the git commit of a backup file.
+"
+" This function is auto-generated so it's not that helpful beyond saying
+" what was edited.
+"
+" Args:
+"     file (str):
+"         The absolute path to a file on-disk which we'll generate a
+"         commit message for.
+"
+" Returns:
+"     str:
+"         The generated commit message. If `file` is inside of a git
+"         repository, the git commit message will include repository and
+"         branch details in the message.
+"
 function! vim_git_backup#git_helper#get_commit_message(file)
     let l:file_name = fnamemodify(a:file, ':t')
 
@@ -46,6 +65,15 @@ function! vim_git_backup#git_helper#get_commit_message(file)
 endfunction
 
 
+" Create a note for a commit message for some backed up file.
+"
+" Args:
+"     file1 (str): The file which the user wants to back up.
+"     file2 (str): The location on-disk where `file1` will be backed up to.
+"
+" Returns:
+"     str: The generated message.
+"
 function! vim_git_backup#git_helper#get_recommended_note(file1, file2)
     if !filereadable(a:file1)
         return 'Added ' . a:file2
@@ -63,6 +91,7 @@ function! vim_git_backup#git_helper#get_recommended_note(file1, file2)
 endfunction
 
 
+" str: Create a recommended tag, if needed.
 function! vim_git_backup#git_helper#get_recommended_tag()
     let l:previous_date = system(vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'describe --abbrev=0 --tags'))
     let l:today = strftime('%y/%m/%d')
@@ -75,7 +104,15 @@ function! vim_git_backup#git_helper#get_recommended_tag()
 endfunction
 
 
-" TODO : Rename this function
+" Create a git command which runs `command` from some git `root` folder.
+"
+" Args:
+"     root (str): The directory of a git repository to run `command` from.
+"     command (str): The raw git command to run.
+"
+" Returns:
+"     str: The generated command.
+"
 function! vim_git_backup#git_helper#get_remote(root, command)
-    return s:RunFromFolder(a:root, a:command)
+    return 'git -C ' . a:root . ' ' . a:command
 endfunction
