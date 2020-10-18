@@ -22,11 +22,12 @@ command! -nargs=0 ToggleBackupFile :call s:ToggleBackupFile()
 
 command! -nargs=0 GHistory :call GHistory()<CR>
 
+
 " Backup the current file whenever the file is saved
-" augroup custom_backup
-"     autocmd!
-"     autocmd BufWritePost * call s:BackupCurrentFile()
-" augroup end
+augroup custom_backup
+    autocmd!
+    autocmd BufWritePost * call s:BackupCurrentFile()
+augroup end
 
 
 let g:custom_backup_dir = get(g:, 'custom_backup_dir', expand("$VIM_CUSTOM_BACKUP_DIRECTORY"))
