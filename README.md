@@ -1,14 +1,3 @@
-- ghistory
- - Auto-escape " and '
- - Add fail-safes into the code.
-  - if ghistory has sed / tac available, etc.
-  - e.g. check if git has "-C" flag
-
-- Add fail-safes into the code.
- - e.g. check if git has "-C" flag
- - if `diff` command is executable, grep, tail, wc, etc.
-
-
 # vim-git-backup
 A top notch backup mechanism for Vim. Maintain copies of your files,
 anywhere, and never lose anything again.

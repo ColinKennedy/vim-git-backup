@@ -1,7 +1,20 @@
-if system('git') !~ '\C[-C'  " If there is not `git -C` option
-    echo 'Git is too old to run vim-git-backup.'
+" Check for required executable commands"
+for name in ["diff", "git", "sed", "tac", "blasfdasdf"]
+    if !executable(name)
+        echoerr 'vim-git-backup requires "' . name . '" cannot continue.'
+
+        finish
+    endif
+endfor
+
+
+" Check that `git` is new enough to run vim-git-backup
+if system('git') !~ '\C[-C'
+    echoerr 'Git is too old to run vim-git-backup.'
+
     finish
 endif
+
 
 if get(g:, 'vim_git_backup_loaded', '0') == '1'
     " Prevent this plugin from being loaded more than once in a single Vim session
