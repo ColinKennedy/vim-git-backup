@@ -1,0 +1,78 @@
+#!/usr/bin/env sh
+
+# A way of viewing editted files in a simple interface You can list all
+# files or just files within the current directory.
+#
+# Usage:
+#     Show the most recently editted files in the current directory
+#     `ghistory log --pretty='' --name-only | awk '!seen[$0]++' | tac`
+#
+#     ... or use this more convenient alias
+#     `ghistory CHANGED`
+#
+#     See all changes from the previous revision, in the current directory
+#     `ghistory diff HEAD^ -- .`
+#
+#     Find out what changed in the last week at the current directory
+#     `ghistory diff \"HEAD@{1 week ago}\" -- .`
+#
+#     See the changed files for the last 10 days
+#     `ghistory log --since=\"10 days ago\" --pretty=format: --name-only | sort | uniq`
+#
+#     See the changed files for the last 10 days in the current directory
+#     `ghistory log --since=\"10 days ago\" --pretty=format: --name-only -- . | sort | uniq`
+#
+#     Get the all-time diff of the files in the current directory
+#     Reference: https://stackoverflow.com/a/5189296/3626104
+#     `ghistory diff `ghistory rev-list --max-parents=0 HEAD` -- .`
+#     or, using a hard-coded alias:
+#     `ghistory diff ORIGINAL -- .`
+#
+#     Search any content in the files in the current directory
+#     `ghistory grep -n foo -- .`
+#
+#     Search for git commits which contain a phrase through EVERY revision of every file in the current directory
+#     `ghistory log -Sthing -- . | grep commit`
+#
+#     Get the search contents for each commit that contains a phrase through EVERY revision of every file in the current directory
+#     `ghistory log -Sthing -- . | grep commit | cut -d" " -f2 | xargs -I{} sh -c "ghistory diff {}^..{} | grep thing"`
+#
+#     Give the current state of this file as it was 10 days ago
+#     `ghistory checkout \'master@{7 days ago}\' -- foo.txt`
+#
+#     Restore a previous version of a file
+#     Reference: https://stackoverflow.com/a/57676960/3626104
+#     `ghistory restore --source=\'HEAD@{1 week ago}\' foo.txt`  # Requires git 2.23+
+#
+# Reference:
+#     http://dev.bennage.com/blog/2012/02/01/finding-stuff-in-your-git-repo-2/
+#     https://dev.to/iggredible/learn-git-grep-to-boost-your-command-line-search-jh7
+#
+BACKUP_DIRECTORY=~/.vim_custom_backups
+
+# Reference: https://stackoverflow.com/a/21425102/3626104
+USER_INPUT=$@
+
+RELATIVE_DIRECTORY=`echo $PWD | sed 's:^[/\\]*::'`
+BACKUP_CURRENT_DIRECTORY=$BACKUP_DIRECTORY/$RELATIVE_DIRECTORY
+
+if [ "$USER_INPUT" = "CHANGED" -o "$USER_INPUT" = "CHANGED -- ." ]
+then
+    MODIFIED_INPUT="log --pretty='' --name-only"
+
+    if [ "$USER_INPUT" = "CHANGED -- ." ]
+    then
+        MODIFIED_INPUT="log --pretty='' --name-only -- ."
+    fi
+
+    echo >&2 "git -C $BACKUP_CURRENT_DIRECTORY $MODIFIED_INPUT | awk '!seen[$0]++' | tac | sed \"s:^$RELATIVE_DIRECTORY[/\\]*::g\""
+    eval "git -C $BACKUP_CURRENT_DIRECTORY $MODIFIED_INPUT" | awk '!seen[$0]++' | tac | sed "s:^$RELATIVE_DIRECTORY[/\\]*::g"
+
+    exit 0
+fi
+
+# A small "alias" - make ORIGINAL refer to the first commit in the git repository
+MODIFIED_INPUT=`echo $USER_INPUT | sed 's:ORIGINAL:\`ghistory rev-list --max-parents=0 HEAD\`:g'`
+
+echo >&2 "git -C $BACKUP_CURRENT_DIRECTORY $MODIFIED_INPUT"
+eval "git -C $BACKUP_CURRENT_DIRECTORY $MODIFIED_INPUT"
