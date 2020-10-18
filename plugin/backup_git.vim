@@ -9,12 +9,14 @@ command! -nargs=* RestoreFileUsingGitBackup :call s:RestoreFileUsingGitBackup(<q
 
 command! -nargs=0 ToggleBackupFile :call s:ToggleBackupFile()
 
+command! -nargs=0 GHistory :call GHistory()<CR>
 
 " Backup the current file whenever the file is saved
 augroup custom_backup
   autocmd!
   autocmd BufWritePost * call s:BackupCurrentFile()
 augroup end
+
 
 let g:custom_backup_dir = get(g:, 'custom_backup_dir', expand("$VIM_CUSTOM_BACKUP_DIRECTORY"))
 
@@ -41,16 +43,20 @@ function! s:RunFromFolder(root, command)
 endfunction
 
 
+" TODO : Rename this function
 function! s:GetRemote(root, command)
-	return s:RunFromFolder(a:root, a:command) . ';'
+	return s:RunFromFolder(a:root, a:command)
+endfunction
+
+
+function! s:GitInit(directory)
+    call system(s:GetRemote(a:directory, 'init'))
 endfunction
 
 
 function! s:SetupBackupDirectory(directory)
-    let cmd = ''
-    let cmd = 'mkdir -p ' . a:directory . ';'
-	let cmd .= s:GetRemote(a:directory, 'init')
-	call system(cmd)
+    call mkdir(a:directory, "p")
+    call s:GitInit()
 endfunction
 
 
@@ -86,9 +92,14 @@ function! s:GetLineDiff(old, new)
 endfunction
 
 
-function! s:AddNote(file1, file2)
+function! s:GitAddNote(message)
+    return s:GetRemote(g:custom_backup_dir, 'nodes add -m "' . message . '"')
+endfunction
+
+
+function! s:GetRecommendedNote(file1, file2)
     if !filereadable(a:file1)
-        return s:GetRemote(g:custom_backup_dir, 'nodes add -m "Added ' . a:file2 . '"')
+        return 'Added ' . a:file2
     endif
 
     let l:line_diff = s:GetLineDiff(a:file1, a:file2)
@@ -99,23 +110,25 @@ function! s:AddNote(file1, file2)
         let l:word = 'lines'
     endif
 
-    return s:GetRemote(g:custom_backup_dir, 'notes add -m "Changed ' . l:line_diff . ' ' . l:word . '"')
+    return 'Changed ' . l:line_diff . ' ' . l:word
 endfunction
 
 
-function! s:GetCopyFile(file, backup_directory)
-    if a:file =~ fnamemodify(a:backup_directory, ':t') | return | endif
-    let l:file_dir = a:backup_directory . expand('%:p:h')
-    let l:backup_file = a:backup_directory . a:file
-
-    let cmd = ''
-
-    if !isdirectory(expand(l:file_dir))
-        let cmd .= 'mkdir -p ' . l:file_dir . ';'
+function! s:CopyFile(file, backup_directory)
+    if a:file == a:backup_directory
+        " Prevent a file from overwriting the backup directory
+        return
     endif
 
-    let cmd .= 'cp ' . a:file . ' ' . l:backup_file . ';'
-    return cmd
+    let l:directory = a:backup_directory . expand('%:p:h')
+    let l:backup_file = a:backup_directory . a:file
+    let l:full_directory = expand(l:directory)
+
+    if !isdirectory(l:full_directory)
+        call mkdir(l:full_directory, "p")
+    endif
+
+    call system('cp ' . a:file . ' ' . l:backup_file)
 endfunction
 
 
@@ -137,7 +150,8 @@ function! s:GetCommitMessage(file)
 	endif
 
     let l:folder_name = fnamemodify(l:folder, ":t")
-    return s:GetRemote(g:custom_backup_dir, 'commit -m "Repo: ' . l:folder_name . '/' . l:branch . '- ' . l:file_name . '"')
+
+    return 'Repo: ' . l:folder_name . '/' . l:branch . '- ' . l:file_name
 endfunction
 
 
@@ -150,28 +164,57 @@ function! s:strip_mount(path)
 endfunction
 
 
+function! s:GitAdd(path)
+    call s:GetRemote(g:custom_backup_dir, 'add ' . a:path)
+endfunction
+
+
+function! s:GitCommit(message)
+    return s:GetRemote(g:custom_backup_dir, 'commit -m "' . message '"')
+endfunction
+
+
+function! s:GetRecommendedTag()
+    let l:previous_date = system(s:GetRemote(g:custom_backup_dir, 'describe --abbrev=0 --tags'))
+    let l:today = strftime('%y/%m/%d')
+
+    if l:today == l:previous_date
+        return ""
+    endif
+
+    return l:today
+endfunction
+
+
+function! s:GitAddTag(tag)
+    return s:GetRemote(g:custom_backup_dir, 'tag ' . a:tag)
+endfunction
+
+
 function! s:BackupCurrentFile()
     if !isdirectory(expand(g:custom_backup_dir))
         call s:SetupBackupDirectory(g:custom_backup_dir)
     endif
 
-    let l:file = expand('%:p')
-    let l:backup_file = g:custom_backup_dir . l:file
-    let l:relative_backup_file = s:strip_mount(l:file)
+    let l:file = expand('%:p')  " e.g. '/tmp/foo.txt'
+    let l:backup_file = g:custom_backup_dir . l:file  " e.g. '~/.vim_custom_backups/tmp/foo.txt'
+    let l:relative_backup_file = s:strip_mount(l:file)  " e.g. 'tmp/foo.txt'
 
-    let cmd = ''
-    let cmd .= s:GetCopyFile(l:file, g:custom_backup_dir)
-    let cmd .= s:GetRemote(g:custom_backup_dir, 'add ' . l:relative_backup_file)
+    call s:CopyFile(l:file, g:custom_backup_dir)
 
-    let cmd .= s:GetCommitMessage(l:file)
-    let cmd .= s:AddNote(l:backup_file, l:file)
+    let commands = []
 
-    let l:previous_date = system(s:GetRemote(g:custom_backup_dir, 'describe --abbrev=0 --tags'))
-    let l:today = strftime('%y/%m/%d')
+    call add(commands, s:GitAdd(l:relative_backup_file))
+    call add(commands, s:GitCommit(s:GetCommitMessage(l:file)))
+    call add(commands, s:GitAddNote(s:GetRecommendedNote(l:backup_file, l:file)))
 
-    if l:today != l:previous_date
-        let cmd .= s:GetRemote(g:custom_backup_dir, 'tag ' . l:today)
+    let tag = s:GetRecommendedTag()
+
+    if !isempty(tag)
+        call add(commands, s:GitAddTag(tag))
     endif
+
+    let cmd = join(commands, ";")
 
     if exists("*job_start")
         " Run the command asynchronously (Vim 8+ only)
@@ -280,5 +323,3 @@ function! GHistory()
 
     call fzf#run({"source": l:files, "sink": "e"})
 endfunction
-
-command! GHistory :call GHistory()<CR>
