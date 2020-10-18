@@ -1,10 +1,13 @@
-- Check all TODO and system calls and try to eliminate as many as possible
-- Add fail-safes into the code. 
+- ghistory
+ - Auto-escape " and '
+ - Add fail-safes into the code.
+  - if ghistory has sed / tac available, etc.
+  - e.g. check if git has "-C" flag
+
+- Add fail-safes into the code.
  - e.g. check if git has "-C" flag
  - if `diff` command is executable, grep, tail, wc, etc.
- - if ghistory has sed / tac available, etc.
-- Add documentation for everything
-- Add checks for all system() calls to make sure that they work
+
 
 # vim-git-backup
 A top notch backup mechanism for Vim. Maintain copies of your files,
@@ -12,7 +15,7 @@ anywhere, and never lose anything again.
 
 
 ## How It Works
-1. Work in Vim as you normally would. 
+1. Work in Vim as you normally would.
 2. Save your file.
 3. vim-git-backup does everything else for you, in the background.
 
@@ -103,9 +106,16 @@ To learn more, run this while inside Vim:
 
 ```vim
 :help vim-git-backup
+:help vim-git-backup-advanced-commands
 ```
 
 
+## Requires
+
+- Vim 8.0+
+- Linux (Windows support on-request)
+
+
 ## Special Thanks
-This plugin idea came from 
+This plugin idea came from
 [this post](https://www.reddit.com/r/vim/comments/8w3udw/topnotch_vim_file_backup_history_with_no_plugins)

@@ -49,6 +49,7 @@ endfunction
 "
 function! vim_git_backup#filer#get_line_diff(old, new)
     " Reference: https://stackoverflow.com/questions/1566461/how-to-count-differences-between-two-files-on-linux#comment51008286_2479947
+    " TODO : Find an OS-dependent way to replace this
     let l:output = s:systemlist('diff -U 0 "' . a:old . '" "' . a:new . '" | grep -v ^@ | tail -n +3 | wc -l')[0]
     return l:output
 endfunction

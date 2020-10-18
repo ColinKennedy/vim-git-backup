@@ -3,10 +3,10 @@ if system('git') !~ '\C[-C'  " If there is not `git -C` option
     finish
 endif
 
-" if get(g:, 'vim_git_backup_loaded', '0') == '1'
-"     " Prevent this plugin from being loaded more than once in a single Vim session
-"     finish
-" endif
+if get(g:, 'vim_git_backup_loaded', '0') == '1'
+    " Prevent this plugin from being loaded more than once in a single Vim session
+    finish
+endif
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -51,7 +51,7 @@ endif
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 function! s:SetupBackupDirectory(directory)
     call mkdir(a:directory, "p")
-    call vim_git_backup#git#init()
+    call vim_git_backup#git#init(a:directory)
 endfunction
 
 
@@ -139,7 +139,7 @@ function! s:RestoreFileUsingGitBackup(...)
 endfunction
 
 
-" Switch between the backup file and its working file
+" Switch between the backup file and its working file.
 function! s:ToggleBackupFile()
     let l:full_path = expand('%:p')
 
@@ -166,21 +166,25 @@ function! s:convert_to_absolute(text)
 endfunction
 
 
-" Open a FZF dialog to show all editted files
-function! GHistory()
-    " Note: This command uses `cd && git` instead of `git -C` because
-    " `git -C` is a relatively recent git feature, which we don't really
-    " need in this case.
-    "
-    let l:text = system("cd " . g:custom_backup_dir . " && git" . " ls-files")
-    let l:files = split(l:text, "\n")
+" If the user also has installed fzf.vim, add fzf-specific functions
+if &rtp =~ "fzf.vim"
+    " Open a FZF dialog to show all edited files.
+    function! GHistory()
+        " Note: This command uses `cd && git` instead of `git -C` because
+        " `git -C` is a relatively recent git feature, which we don't really
+        " need in this case.
+        "
+        let l:text = system("cd " . g:custom_backup_dir . " && git" . " ls-files")
+        let l:files = split(l:text, "\n")
 
-    " `l:files` is a list of paths which are relative to the Vim backup folder
-    " So we must convert them back into absolute paths.
-    "
-    let l:files = map(l:files, 's:convert_to_absolute(v:val)')
+        " `l:files` is a list of paths which are relative to the Vim backup folder
+        " So we must convert them back into absolute paths.
+        "
+        let l:files = map(l:files, 's:convert_to_absolute(v:val)')
 
-    call fzf#run({"source": l:files, "sink": "e"})
-endfunction
+        call fzf#run({"source": l:files, "sink": "e"})
+    endfunction
+endif
+
 
 let g:vim_git_backup_loaded = '1'
