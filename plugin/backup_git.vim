@@ -3,10 +3,10 @@ if system('git') !~ '\C[-C'  " If there is not `git -C` option
     finish
 endif
 
-if get(g:, 'vim_git_backup_loaded', '0') == '1'
-    " Prevent this plugin from being loaded more than once in a single Vim session
-    finish
-endif
+" if get(g:, 'vim_git_backup_loaded', '0') == '1'
+"     " Prevent this plugin from being loaded more than once in a single Vim session
+"     finish
+" endif
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -51,7 +51,7 @@ endif
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 function! s:SetupBackupDirectory(directory)
     call mkdir(a:directory, "p")
-    call vim_git_backup#git#Init()
+    call vim_git_backup#git#init()
 endfunction
 
 
@@ -62,31 +62,31 @@ function! s:BackupCurrentFile()
 
     let l:file = expand('%:p')  " e.g. '/tmp/foo.txt'
     let l:backup_file = g:custom_backup_dir . l:file  " e.g. '~/.vim_custom_backups/tmp/foo.txt'
-    let l:relative_backup_file = vim_git_backups#filer#strip_mount(l:file)  " e.g. 'tmp/foo.txt'
+    let l:relative_backup_file = vim_git_backup#filer#strip_mount(l:file)  " e.g. 'tmp/foo.txt'
 
-    " call vim_git_backups#filer#copy(l:file, g:custom_backup_dir)
-    "
-    " let commands = []
-    "
-    " call add(commands, vim_git_backup#git#Add(l:relative_backup_file))
-    " call add(commands, vim_git_backup#git#commit(vim_git_backup#git_helper#get_commit_message(l:file)))
-    " call add(commands, vim_git_backup#git#AddNote(vim_git_backup#git_helper#get_recommended_note(l:backup_file, l:file)))
-    "
-    " let tag = vim_git_backup#git_helper#get_recommended_tag()
-    "
-    " if !isempty(tag)
-    "     call add(commands, vim_git_backup#git#AddTag(tag))
-    " endif
-    "
-    " let cmd = join(commands, ";")
-    "
-    " if exists("*job_start")
-    "     " Run the command asynchronously (Vim 8+ only)
-    "     call job_start([g:custom_backup_shell_executable, '-c', cmd])
-    " else
-    "     " Run the command synchronously
-    "     call system(cmd)
-    " endif
+    call vim_git_backup#filer#copy(l:file, g:custom_backup_dir)
+
+    let l:commands = []
+
+    call add(l:commands, vim_git_backup#git#add(l:relative_backup_file))
+    call add(l:commands, vim_git_backup#git#commit(vim_git_backup#git_helper#get_commit_message(l:file)))
+    call add(l:commands, vim_git_backup#git#add_note(vim_git_backup#git_helper#get_recommended_note(l:backup_file, l:file)))
+
+    let l:tag = vim_git_backup#git_helper#get_recommended_tag()
+
+    if !empty(tag)
+        call add(l:commands, vim_git_backup#git#add_tag(l:tag))
+    endif
+
+    let l:command = join(l:commands, ";")
+
+    if exists("*job_start")
+        " Run the command asynchronously (Vim 8+ only)
+        call job_start([g:custom_backup_shell_executable, '-c', l:command])
+    else
+        " Run the command synchronously
+        call system(l:command)
+    endif
 endfunction
 
 
@@ -95,7 +95,7 @@ function! s:OpenCurrentFileBackupHistory()
     let cmd = "cd " . backup_dir
     let cmd .= "; git log -p --since='1 month' " . expand('%:t')
 
-    silent! exe "noautocmd botright pedit vim_git_backups"
+    silent! exe "noautocmd botright pedit vim_git_backup"
 
     noautocmd wincmd P
     set buftype=nofile

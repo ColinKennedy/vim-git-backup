@@ -4,6 +4,7 @@
  - if `diff` command is executable, grep, tail, wc, etc.
  - if ghistory has sed / tac available, etc.
 - Add documentation for everything
+- Add checks for all system() calls to make sure that they work
 
 # vim-git-backup
 A top notch backup mechanism for Vim. Maintain copies of your files,

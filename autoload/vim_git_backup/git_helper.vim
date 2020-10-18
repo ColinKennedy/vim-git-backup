@@ -18,12 +18,6 @@ function! s:GetGitRoot(path)
 endfunction
 
 
-" TODO : Rename this function
-function! vim_git_backup#git_helper#GetRemote(root, command)
-    return s:RunFromFolder(a:root, a:command)
-endfunction
-
-
 function! s:RunFromFolder(root, command)
 	return 'git -C ' . a:root . ' ' . a:command
 endfunction
@@ -34,15 +28,15 @@ function! vim_git_backup#git_helper#get_commit_message(file)
 
     let l:folder = s:GetGitRoot(a:file)
     if l:folder == ""
-        return vim_git_backup#git_helper#GetRemote(g:custom_backup_dir, 'commit -m "Updated: ' . l:file_name . '"')
+        return vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'commit -m "Updated: ' . l:file_name . '"')
     endif
 
-	let l:branch_command = vim_git_backup#git_helper#GetRemote(l:folder, 'rev-parse --abbrev-ref HEAD')
+	let l:branch_command = vim_git_backup#git_helper#get_remote(l:folder, 'rev-parse --abbrev-ref HEAD')
     let l:branch = system(l:branch_command)
 
 	if l:branch == 'HEAD'  " This happens when the user is not on the latest commit of a branch
         " This gets the name of the commit that the user is on
-	    let l:branch_command = vim_git_backup#git_helper#GetRemote(l:folder, 'rev-parse HEAD')
+	    let l:branch_command = vim_git_backup#git_helper#get_remote(l:folder, 'rev-parse HEAD')
         let l:branch = system(l:branch_command)
 	endif
 
@@ -57,7 +51,7 @@ function! vim_git_backup#git_helper#get_recommended_note(file1, file2)
         return 'Added ' . a:file2
     endif
 
-    let l:line_diff = vim_git_backups#filer#get_line_diff(a:file1, a:file2)
+    let l:line_diff = vim_git_backup#filer#get_line_diff(a:file1, a:file2)
 
     if l:line_diff == '1'
         let l:word = 'line'
@@ -70,7 +64,7 @@ endfunction
 
 
 function! vim_git_backup#git_helper#get_recommended_tag()
-    let l:previous_date = system(vim_git_backup#git_helper#GetRemote(g:custom_backup_dir, 'describe --abbrev=0 --tags'))
+    let l:previous_date = system(vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'describe --abbrev=0 --tags'))
     let l:today = strftime('%y/%m/%d')
 
     if l:today == l:previous_date
@@ -78,4 +72,10 @@ function! vim_git_backup#git_helper#get_recommended_tag()
     endif
 
     return l:today
+endfunction
+
+
+" TODO : Rename this function
+function! vim_git_backup#git_helper#get_remote(root, command)
+    return s:RunFromFolder(a:root, a:command)
 endfunction

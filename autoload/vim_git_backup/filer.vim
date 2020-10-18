@@ -1,4 +1,9 @@
-function! vim_git_backups#filer#copy(file, backup_directory)
+function! s:systemlist(command)
+    return split(system(a:command, nr2char(10)))
+endfunction
+
+
+function! vim_git_backup#filer#copy(file, backup_directory)
     if a:file == a:backup_directory
         " Prevent a file from overwriting the backup directory
         return
@@ -17,14 +22,14 @@ function! vim_git_backups#filer#copy(file, backup_directory)
 endfunction
 
 
-function! vim_git_backups#filer#get_line_diff(old, new)
+function! vim_git_backup#filer#get_line_diff(old, new)
     " Reference: https://stackoverflow.com/questions/1566461/how-to-count-differences-between-two-files-on-linux#comment51008286_2479947
     let l:output = s:systemlist('diff -U 0 "' . a:old . '" "' . a:new . '" | grep -v ^@ | tail -n +3 | wc -l')[0]
     return l:output
 endfunction
 
 
-function! vim_git_backups#filer#strip_mount(path)
+function! vim_git_backup#filer#strip_mount(path)
     if has("win32")
         return substitute(a:path, "^[A-Z]:\\", "", "")
     endif
