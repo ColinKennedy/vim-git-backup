@@ -1,5 +1,5 @@
 " Check for required executable commands"
-for name in ["diff", "git", "sed", "tac", "blasfdasdf"]
+for name in ["diff", "git", "sed", "tac"]
     if !executable(name)
         echoerr 'vim-git-backup requires "' . name . '" cannot continue.'
 
