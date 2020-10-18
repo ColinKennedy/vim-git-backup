@@ -1,3 +1,9 @@
+- Check all TODO and system calls and try to eliminate as many as possible
+- Add fail-safes into the code. 
+ - e.g. check if git has "-C" flag
+ - if `diff` command is executable, grep, tail, wc, etc.
+ - if ghistory has sed / tac available, etc.
+
 # vim-git-backup
 A top notch backup mechanism for Vim. Maintain copies of your files,
 anywhere, and never lose anything again.
@@ -18,6 +24,7 @@ Here's a few personal favorites
 
 - [agit](https://github.com/cohama/agit.vim)
 - [fugitive](https://github.com/tpope/vim-fugitive)
+- [fzf](https://github.com/junegunn/fzf.vim)
 - [gitk](https://git-scm.com/docs/gitk)
 
 
