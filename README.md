@@ -23,6 +23,7 @@ Here's a few personal favorites
 
 
 ## Configuration
+### Back-up Directory
 Control the folder where backups are stored, either by setting the
 
 `VIM_CUSTOM_BACKUP_DIRECTORY` environment variable or by setting `g:custom_backup_dir` in your .vimrc.
@@ -35,6 +36,17 @@ export VIM_CUSTOM_BACKUP_DIRECTORY=~/some/folder
 
 ```vim
 let g:custom_backup_dir = "~/some/folder"
+```
+
+### File Listing
+
+By default, :GHistory's file list is in the order of
+most-recently-updated. This calculation is a bit slow. If you want it
+faster and don't care about file order, or just want file lists to be
+alphabetical, use this:
+
+```vim
+let g:git_backup_keep_file_order = 0
 ```
 
 

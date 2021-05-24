@@ -183,13 +183,29 @@ endfunction
 " If the user also has installed fzf.vim, add fzf-specific functions
 if &rtp =~ "fzf.vim"
     " Open a FZF dialog to show all edited files.
-    function! GHistory()
+    function! GHistory(...)
         " Note: This command uses `cd && git` instead of `git -C` because
         " `git -C` is a relatively recent git feature, which we don't really
         " need in this case.
         "
-        let l:text = system("cd " . g:custom_backup_dir . " && git" . " ls-files")
-        let l:files = split(l:text, "\n")
+        if a:0
+            let l:keep_order = a:1
+        else
+            let l:keep_order = get(g:, "git_backup_keep_file_order", "1") == "1"
+        endif
+
+        if l:keep_order
+            let l:commands = [
+            \    'cd ' . g:custom_backup_dir,
+            \    'git diff-index --name-only --diff-filter=A @',
+            \    'git log --pretty='''' --name-only | awk ''!seen[$0]++'' 2> /dev/null',
+            \]
+            let l:text = system(join(l:commands, "\n"))
+            let l:files = split(l:text, "\n")
+        else
+            let l:text = system("cd " . g:custom_backup_dir . " && git" . " ls-files")
+            let l:files = split(l:text, "\n")
+        endif
 
         " `l:files` is a list of paths which are relative to the Vim backup folder
         " So we must convert them back into absolute paths.
