@@ -47,7 +47,7 @@ function! vim_git_backup#git_helper#get_commit_message(file)
 
     let l:folder = s:GetGitRoot(a:file)
     if l:folder == ""
-        return vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'commit -m "Updated: ' . l:file_name . '"')
+        return vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'Updated: ' . l:file_name)
     endif
 
 	let l:branch_command = vim_git_backup#git_helper#get_remote(l:folder, 'rev-parse --abbrev-ref HEAD')

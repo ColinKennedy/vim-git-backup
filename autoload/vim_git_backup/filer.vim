@@ -1,3 +1,42 @@
+let g:_safe_character = ''
+
+
+" Check if `text` is an absolute Windows file system path.
+"
+" Args:
+"     text (str): A file or folder on-disk, e.g. "C:\foo.txt".
+"
+" Returns:
+"     bool: If `text` comes from windows, return True. e.g. True.
+"
+function! s:has_drive(text)
+    let l:match = matchstr(a:text, "^[A-Z]:")
+
+    return !empty(l:match)
+endfunction
+
+
+" Remove a leading Windows drive letter, if any.
+"
+" Args:
+"     text (str): A file or folder on-disk, e.g. "C:\foo.txt".
+"
+" Returns:
+"     str: The simplified path. e.g. "C\foo.txt".
+"
+function! s:substitute_drive(text)
+    if !has('win32')
+        return a:text
+    endif
+
+    if !s:has_drive(a:text)
+        return a:text
+    endif
+
+    return substitute(a:text, ":", g:_safe_character, 'g')
+endfunction
+
+
 " Run a command in the terminal and return a list of strings, showing its output.
 "
 " Args:
@@ -18,22 +57,31 @@ endfunction
 "     backup_directory (str): The absolute directory to a folder on-disk to copy into.
 "
 function! vim_git_backup#filer#copy(file, backup_directory)
-    if a:file == a:backup_directory
+    let l:file = s:substitute_drive(a:file)
+
+    if l:file == a:backup_directory
         " Prevent a file from overwriting the backup directory
-        echoerr 'Cannot copy "' . a:file . '" into "' . a:backup_directory . '"'
+        echoerr 'Cannot copy "' . l:file . '" into "' . a:backup_directory . '"'
 
         return
     endif
 
-    let l:directory = a:backup_directory . expand('%:p:h')
-    let l:backup_file = a:backup_directory . a:file
+    let l:current_file_path = s:substitute_drive(expand('%:p:h'))
+
+    if l:file != a:file
+        let l:file = '\' . l:file
+        let l:current_file_path = '\' . l:current_file_path
+    endif
+
+    let l:directory = a:backup_directory . l:current_file_path
+    let l:backup_file = a:backup_directory . l:file
     let l:full_directory = expand(l:directory)
 
     if !isdirectory(l:full_directory)
         call mkdir(l:full_directory, "p")
     endif
 
-    " Copy `a:file` to `l:backup_file`
+    " Copy `l:file` to `l:backup_file`
     call writefile(readfile(a:file), l:backup_file, "w")
 endfunction
 
@@ -68,7 +116,7 @@ endfunction
 "
 function! vim_git_backup#filer#strip_mount(path)
     if has("win32")
-        return substitute(a:path, "^[A-Z]:\\", "", "")
+        return s:substitute_drive(a:path)
     endif
 
     return substitute(a:path, "^/", "", "")

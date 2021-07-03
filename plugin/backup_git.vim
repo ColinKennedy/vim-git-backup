@@ -1,4 +1,4 @@
-" Check for required executable commands"
+" Check for required executable commands
 for name in ["diff", "git", "sed", "tac"]
     if !executable(name)
         echoerr 'vim-git-backup requires "' . name . '" cannot continue.'
@@ -53,11 +53,11 @@ let g:custom_backup_dir = expand(g:custom_backup_dir)
 
 " Choose a shell executable"
 if expand("$SHELL") != "$SHELL"
-    let g:custom_backup_shell_executable = expand("$SHELL")
+    let g:custom_backup_shell_executable = expand("$SHELL") . " -c"
 elseif has("win32")
-    let g:custom_backup_shell_executable = "C:\\Windows\\System32\\cmd.exe"
+    let g:custom_backup_shell_executable = "C:\\Windows\\System32\\cmd.exe /C"
 else
-    let g:custom_backup_shell_executable = "/bin/sh"
+    let g:custom_backup_shell_executable = "/bin/sh -c"
 endif
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -92,11 +92,18 @@ function! s:BackupCurrentFile()
         call add(l:commands, vim_git_backup#git#add_tag(l:tag))
     endif
 
-    let l:command = join(l:commands, ";")
+    let l:command_separator = ';'
+
+    if has('win32')
+        let l:command_separator = '&'
+    endif
+
+    let l:command = join(l:commands, l:command_separator)
 
     if exists("*job_start")
         " Run the command asynchronously (Vim 8+ only)
-        call job_start([g:custom_backup_shell_executable, '-c', l:command])
+        let l:job_command = g:custom_backup_shell_executable . " " . l:command
+        call job_start(l:job_command)
     else
         " Run the command synchronously
         call system(l:command)
