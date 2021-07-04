@@ -82,7 +82,7 @@ function! vim_git_backup#filer#copy(file, backup_directory)
     endif
 
     " Copy `l:file` to `l:backup_file`
-    call writefile(readfile(a:file), l:backup_file, "w")
+    call writefile(readfile(a:file), l:backup_file, "b")
 endfunction
 
 
