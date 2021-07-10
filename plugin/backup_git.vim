@@ -33,7 +33,7 @@ command! -nargs=* RestoreFileUsingGitBackup :call s:RestoreFileUsingGitBackup(<q
 
 command! -nargs=0 ToggleBackupFile :call s:ToggleBackupFile()
 
-command! -nargs=0 GHistory :call GHistory()<CR>
+command! -nargs=0 GHistory :call GHistory()
 
 
 " Backup the current file whenever the file is saved
