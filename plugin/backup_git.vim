@@ -100,8 +100,11 @@ function! s:BackupCurrentFile()
 
     let l:command = join(l:commands, l:command_separator)
 
-    if exists("*job_start")
-        " Run the command asynchronously (Vim 8+ only)
+    if exists("*jobstart")
+        " Run asynchronously, in Neovim
+        call jobstart(l:command)
+    elseif exists("*job_start")
+        " Run asynchronously, in Vim 8+
         let l:job_command = g:custom_backup_shell_executable . " " . l:command
         call job_start(l:job_command)
     else
