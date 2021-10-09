@@ -1,3 +1,8 @@
+if get(g:, 'vim_git_backup_loaded', '0') == '1'
+    " Prevent this plugin from being loaded more than once in a single Vim session
+    finish
+endif
+
 " Check for required executable commands
 for name in ["diff", "git", "sed", "tac"]
     if !executable(name)
@@ -7,10 +12,16 @@ for name in ["diff", "git", "sed", "tac"]
     endif
 endfor
 
+if !get(g:, 'vim_git_backup_shell_separator')
+    let g:vim_git_backup_shell_separator = ' && '
+    let g:vim_git_backup_shell_setter = "%s='%z'"
+endif
 
-if get(g:, 'vim_git_backup_loaded', '0') == '1'
-    " Prevent this plugin from being loaded more than once in a single Vim session
-    finish
+
+if has('win32')
+    let g:vim_git_backup_is_windows = 1
+else
+    let g:vim_git_backup_is_windows = 0
 endif
 
 
@@ -66,31 +77,30 @@ function! s:BackupCurrentFile()
         call s:SetupBackupDirectory(g:custom_backup_dir)
     endif
 
+    " 1. Backup the file
     let l:file = expand('%:p')  " e.g. '/tmp/foo.txt'
     let l:backup_file = g:custom_backup_dir . l:file  " e.g. '~/.vim_custom_backups/tmp/foo.txt'
     let l:relative_backup_file = vim_git_backup#filer#strip_mount(l:file)  " e.g. 'tmp/foo.txt'
-
-    call vim_git_backup#filer#copy(l:file, g:custom_backup_dir)
+    let l:file_lines = readfile(l:file)
+    let l:recommended_note = vim_git_backup#git_helper#get_recommended_note(
+    \ l:backup_file,
+    \ l:file,
+    \ l:file_lines
+    \ )
+    
+    call vim_git_backup#filer#copy(l:file, l:file_lines, g:custom_backup_dir)
 
     let l:commands = []
 
     call add(l:commands, vim_git_backup#git#add(l:relative_backup_file))
-    call add(l:commands, vim_git_backup#git#commit(vim_git_backup#git_helper#get_commit_message(l:file)))
-    call add(l:commands, vim_git_backup#git#add_note(vim_git_backup#git_helper#get_recommended_note(l:backup_file, l:file)))
 
-    let l:tag = vim_git_backup#git_helper#get_recommended_tag()
+    for l:line in vim_git_backup#git_helper#get_commit_commands(g:custom_backup_dir, l:file)
+        call add(l:commands, l:line)
+    endfor
 
-    if !empty(tag)
-        call add(l:commands, vim_git_backup#git#add_tag(l:tag))
-    endif
+    call add(l:commands, vim_git_backup#git#add_note(l:recommended_note))
 
-    let l:command_separator = ';'
-
-    if has('win32')
-        let l:command_separator = '&'
-    endif
-
-    let l:command = join(l:commands, l:command_separator)
+    let l:command = join(l:commands, g:vim_git_backup_shell_separator)
 
     if exists("*jobstart")
         " Run asynchronously, in Neovim
@@ -131,6 +141,7 @@ function! s:RestoreFileUsingGitBackup(...)
 
     if l:destination == g:custom_backup_dir
         echoerr "No backup file was given or found. Please give a file path to RestoreFileUsingGitBackup."
+
         return
     endif
 

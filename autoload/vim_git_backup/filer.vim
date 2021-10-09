@@ -37,26 +37,13 @@ function! s:substitute_drive(text)
 endfunction
 
 
-" Run a command in the terminal and return a list of strings, showing its output.
-"
-" Args:
-"     command (str): The command to run.
-"
-" Returns:
-"     list[str]: The found command output.
-"
-function! s:systemlist(command)
-    return split(system(a:command, nr2char(10)))
-endfunction
-
-
 " Copy `file` into `backup_directory`.
 "
 " Args:
 "     file (str): The absolute path to a file or folder.
 "     backup_directory (str): The absolute directory to a folder on-disk to copy into.
 "
-function! vim_git_backup#filer#copy(file, backup_directory)
+function! vim_git_backup#filer#copy(file, file_lines, backup_directory)
     let l:file = s:substitute_drive(a:file)
 
     if l:file == a:backup_directory
@@ -82,24 +69,7 @@ function! vim_git_backup#filer#copy(file, backup_directory)
     endif
 
     " Copy `l:file` to `l:backup_file`
-    call writefile(readfile(a:file), l:backup_file, "b")
-endfunction
-
-
-" Get the lines which differ between `old` and `new`.
-"
-" Args:
-"     old (str): The absolute file path to an older version of a file.
-"     new (str): The absolute file path to an newer version of the same file.
-"
-" Returns:
-"     list[str]: The found diff, if any.
-"
-function! vim_git_backup#filer#get_line_diff(old, new)
-    " Reference: https://stackoverflow.com/questions/1566461/how-to-count-differences-between-two-files-on-linux#comment51008286_2479947
-    " TODO : Find an OS-dependent way to replace this
-    let l:output = s:systemlist('diff -U 0 "' . a:old . '" "' . a:new . '" | grep -v ^@ | tail -n +3 | wc -l')[0]
-    return l:output
+    call writefile(a:file_lines, l:backup_file, "b")
 endfunction
 
 

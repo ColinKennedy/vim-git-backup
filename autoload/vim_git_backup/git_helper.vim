@@ -1,6 +1,27 @@
-if !get(g:, 'vim_git_backup_shell_separator')
-    let g:vim_git_backup_shell_separator = '&&'
-endif
+function! s:_set_command(variable_name, assignee)
+    if !g:vim_git_backup_is_windows
+        let l:escaped = substitute(a:assignee, '&', '\\&', 'g')
+        let l:text = substitute(g:vim_git_backup_shell_setter, '%s', a:variable_name, 'g')
+
+        return substitute(l:text, '%z', '`' . l:escaped . '`', 'g')
+    endif
+
+    echoerr 'Windows is not supported yet'
+
+    return ''
+endfunction
+
+
+function s:_variable(name)
+    if !g:vim_git_backup_is_windows
+        return '$' . a:name
+    endif
+
+    echoerr 'Windows is not supported yet'
+
+    return ''
+endfunction
+
 
 " Find the root git folder, assuming `path` is on or inside of a git repository.
 "
@@ -46,26 +67,25 @@ endfunction
 "         repository, the git commit message will include repository and
 "         branch details in the message.
 "
-function! vim_git_backup#git_helper#get_commit_message(file)
+function! vim_git_backup#git_helper#get_commit_commands(root, file)
     let l:file_name = fnamemodify(a:file, ':t')
 
     let l:folder = s:GetGitRoot(a:file)
+
     if l:folder == ""
         return vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'Updated: ' . l:file_name)
     endif
 
-    let l:branch_command = vim_git_backup#git_helper#get_remote(l:folder, 'rev-parse --abbrev-ref HEAD')
-    let l:branch = system(l:branch_command)
-
-    if l:branch == 'HEAD'  " This happens when the user is not on the latest commit of a branch
-        " This gets the name of the commit that the user is on
-        let l:branch_command = vim_git_backup#git_helper#get_remote(l:folder, 'rev-parse HEAD')
-        let l:branch = system(l:branch_command)
-    endif
-
     let l:folder_name = fnamemodify(l:folder, ":t")
+    let l:branch_name_command = vim_git_backup#git_helper#get_remote(l:folder, 'rev-parse --abbrev-ref HEAD')
+    let l:branch_variable_name = 'branch_name'
+    let l:commit_message = 'Repo: ' . l:folder_name . '/' . s:_variable(l:branch_variable_name) . ' - ' . l:file_name
+    let l:commit_command = "commit -m '" . l:commit_message . "'"
 
-    return 'Repo: ' . l:folder_name . '/' . l:branch . '- ' . l:file_name
+    return [
+    \ s:_set_command(l:branch_variable_name, l:branch_name_command),
+    \ vim_git_backup#git_helper#get_remote(a:root, l:commit_command),
+    \ ]
 endfunction
 
 
@@ -78,33 +98,30 @@ endfunction
 " Returns:
 "     str: The generated message.
 "
-function! vim_git_backup#git_helper#get_recommended_note(file1, file2)
-    if !filereadable(a:file1)
-        return 'Added ' . a:file2
+function! vim_git_backup#git_helper#get_recommended_note(old, new, new_lines)
+    if !filereadable(a:old)
+        return 'Added ' . a:new
     endif
 
-    let l:line_diff = vim_git_backup#filer#get_line_diff(a:file1, a:file2)
+    let l:old_line_count = len(readfile(a:old))
+    let l:new_line_count = len(a:new_lines)
 
-    if l:line_diff == '1'
+    let l:difference = l:new_line_count - l:old_line_count
+
+    if l:difference == 1 || l:difference == -1
         let l:word = 'line'
     else
         let l:word = 'lines'
     endif
 
-    return 'Changed ' . l:line_diff . ' ' . l:word
-endfunction
-
-
-" str: Create a recommended tag, if needed.
-function! vim_git_backup#git_helper#get_recommended_tag()
-    let l:previous_date = system(vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'describe --abbrev=0 --tags'))
-    let l:today = strftime('%y/%m/%d')
-
-    if l:today == l:previous_date
-        return ""
+    if l:difference >= 0
+        let l:modifier = 'Added'
+    else
+        let l:modifier = 'Removed'
+        let l:difference *= -1
     endif
 
-    return l:today
+    return l:modifier . ' ' . l:difference . ' ' . l:word
 endfunction
 
 
