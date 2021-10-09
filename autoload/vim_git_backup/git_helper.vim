@@ -1,9 +1,37 @@
+" Prevent special characters from getting manipulated by vimscript functions accidentally.
+"
+" This function is a companion to `s:_set_command`.
+"
+" Args:
+"     text (str): The text to escape. e.g. "cd /tmp && ls"
+" 
+" Returns:
+"     str: The escaped text. e.g. "cd /tmp \&\& ls"
+"
+function !s:_escape(text)
+    return substitute(a:text, '&', '\\&', 'g')
+endfunction
+
+
+" Create a shell-style set-variable command. e.g. `set foo=`ls bar``.
+"
+" Important:
+"     This function assumes that `assignee` has special characters escaped.
+"     Known characters which must be escaped
+"     - &
+"
+" Args:
+"     variable_name (str): The name of the shell variable to create.
+"     assignee (str): The right-hand value to assign onto `variable_name`.
+"
+" Returns:
+"     str: The final variable-set command. e.g. "set foo=bar".
+"
 function! s:_set_command(variable_name, assignee)
     if !g:vim_git_backup_is_windows
-        let l:escaped = substitute(a:assignee, '&', '\\&', 'g')
         let l:text = substitute(g:vim_git_backup_shell_setter, '%s', a:variable_name, 'g')
 
-        return substitute(l:text, '%z', '`' . l:escaped . '`', 'g')
+        return substitute(l:text, '%z', a:assignee . 'g')
     endif
 
     echoerr 'Windows is not supported yet'
@@ -12,6 +40,14 @@ function! s:_set_command(variable_name, assignee)
 endfunction
 
 
+" Convert `name` into a terminal variable.
+"
+" Args:
+"     name (str): The variable name to make into a variable. e.g. "foo
+"
+" Returns:
+"     str: The generated variable name. e.g. "$foo".
+"
 function s:_variable(name)
     if !g:vim_git_backup_is_windows
         return '$' . a:name
@@ -20,6 +56,19 @@ function s:_variable(name)
     echoerr 'Windows is not supported yet'
 
     return ''
+endfunction
+
+
+" Make a in-line shell command from `text`.
+"
+" Args:
+"     command (str): The shell text that represents a command. e.g. "cd /tmp".
+"
+" Returns:
+"     str: The generated command. e.g. "`cd /tmp`".
+"
+function !s:_wrap(command)
+    return '`' . a:command . '`'
 endfunction
 
 
@@ -62,10 +111,8 @@ endfunction
 "         commit message for.
 "
 " Returns:
-"     str:
-"         The generated commit message. If `file` is inside of a git
-"         repository, the git commit message will include repository and
-"         branch details in the message.
+"     list[str]:
+"         The shell commands needed to generate a git commit message.
 "
 function! vim_git_backup#git_helper#get_commit_commands(root, file)
     let l:file_name = fnamemodify(a:file, ':t')
@@ -73,7 +120,7 @@ function! vim_git_backup#git_helper#get_commit_commands(root, file)
     let l:folder = s:GetGitRoot(a:file)
 
     if l:folder == ""
-        return vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'Updated: ' . l:file_name)
+        return [vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'Updated: ' . l:file_name)]
     endif
 
     let l:folder_name = fnamemodify(l:folder, ":t")
@@ -81,6 +128,8 @@ function! vim_git_backup#git_helper#get_commit_commands(root, file)
     let l:branch_variable_name = 'branch_name'
     let l:commit_message = 'Repo: ' . l:folder_name . '/' . s:_variable(l:branch_variable_name) . ' - ' . l:file_name
     let l:commit_command = "commit -m '" . l:commit_message . "'"
+
+    let l:branch_name_command = s:_wrap(s:_escape(l:branch_name_command))
 
     return [
     \ s:_set_command(l:branch_variable_name, l:branch_name_command),
@@ -92,8 +141,9 @@ endfunction
 " Create a note for a commit message for some backed up file.
 "
 " Args:
-"     file1 (str): The file which the user wants to back up.
-"     file2 (str): The location on-disk where `file1` will be backed up to.
+"     old (str): The file which the user wants to back up.
+"     new (str): The location on-disk where `file1` will be backed up to.
+"     new_lines (list[str]): The text lines of `new` to compare against `old`.
 "
 " Returns:
 "     str: The generated message.

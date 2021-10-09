@@ -41,6 +41,7 @@ endfunction
 "
 " Args:
 "     file (str): The absolute path to a file or folder.
+"     file_lines (list[str]): The source code lines of `file`.
 "     backup_directory (str): The absolute directory to a folder on-disk to copy into.
 "
 function! vim_git_backup#filer#copy(file, file_lines, backup_directory)
