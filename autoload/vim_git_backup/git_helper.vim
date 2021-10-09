@@ -54,14 +54,14 @@ function! vim_git_backup#git_helper#get_commit_message(file)
         return vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'Updated: ' . l:file_name)
     endif
 
-	let l:branch_command = vim_git_backup#git_helper#get_remote(l:folder, 'rev-parse --abbrev-ref HEAD')
+    let l:branch_command = vim_git_backup#git_helper#get_remote(l:folder, 'rev-parse --abbrev-ref HEAD')
     let l:branch = system(l:branch_command)
 
-	if l:branch == 'HEAD'  " This happens when the user is not on the latest commit of a branch
+    if l:branch == 'HEAD'  " This happens when the user is not on the latest commit of a branch
         " This gets the name of the commit that the user is on
-	    let l:branch_command = vim_git_backup#git_helper#get_remote(l:folder, 'rev-parse HEAD')
+        let l:branch_command = vim_git_backup#git_helper#get_remote(l:folder, 'rev-parse HEAD')
         let l:branch = system(l:branch_command)
-	endif
+    endif
 
     let l:folder_name = fnamemodify(l:folder, ":t")
 
