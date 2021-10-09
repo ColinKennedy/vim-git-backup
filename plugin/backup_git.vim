@@ -8,14 +8,6 @@ for name in ["diff", "git", "sed", "tac"]
 endfor
 
 
-" Check that `git` is new enough to run vim-git-backup
-if system('git') !~ '\C[-C'
-    echoerr 'Git is too old to run vim-git-backup.'
-
-    finish
-endif
-
-
 if get(g:, 'vim_git_backup_loaded', '0') == '1'
     " Prevent this plugin from being loaded more than once in a single Vim session
     finish

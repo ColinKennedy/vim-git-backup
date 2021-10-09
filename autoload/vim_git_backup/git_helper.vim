@@ -1,3 +1,7 @@
+if !get(g:, 'vim_git_backup_shell_separator')
+    let g:vim_git_backup_shell_separator = '&&'
+endif
+
 " Find the root git folder, assuming `path` is on or inside of a git repository.
 "
 " Args:
@@ -114,5 +118,5 @@ endfunction
 "     str: The generated command.
 "
 function! vim_git_backup#git_helper#get_remote(root, command)
-    return 'git -C ' . a:root . ' ' . a:command
+    return 'cd ' . a:root . g:vim_git_backup_shell_separator . 'git ' . a:command
 endfunction

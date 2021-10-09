@@ -65,8 +65,8 @@ then
         MODIFIED_INPUT="log --pretty='' --name-only -- ."
     fi
 
-    echo >&2 "git -C $BACKUP_CURRENT_DIRECTORY $MODIFIED_INPUT | awk '!seen[$0]++' | tac | sed \"s:^$RELATIVE_DIRECTORY[/\\]*::g\""
-    eval "git -C $BACKUP_CURRENT_DIRECTORY $MODIFIED_INPUT" | awk '!seen[$0]++' | tac | sed "s:^$RELATIVE_DIRECTORY[/\\]*::g"
+    echo >&2 "cd $BACKUP_CURRENT_DIRECTORY && git $MODIFIED_INPUT | awk '!seen[$0]++' | tac | sed \"s:^$RELATIVE_DIRECTORY[/\\]*::g\""
+    eval "cd $BACKUP_CURRENT_DIRECTORY && git $MODIFIED_INPUT" | awk '!seen[$0]++' | tac | sed "s:^$RELATIVE_DIRECTORY[/\\]*::g"
 
     exit 0
 fi
@@ -74,5 +74,5 @@ fi
 # A small "alias" - make ORIGINAL refer to the first commit in the git repository
 MODIFIED_INPUT=`echo $USER_INPUT | sed 's:ORIGINAL:\`ghistory rev-list --max-parents=0 HEAD\`:g'`
 
-echo >&2 "git -C $BACKUP_CURRENT_DIRECTORY $MODIFIED_INPUT"
-eval "git -C $BACKUP_CURRENT_DIRECTORY $MODIFIED_INPUT"
+echo >&2 "cd $BACKUP_CURRENT_DIRECTORY && git $MODIFIED_INPUT"
+eval "cd $BACKUP_CURRENT_DIRECTORY && git $MODIFIED_INPUT"
