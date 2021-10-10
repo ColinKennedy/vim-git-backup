@@ -132,7 +132,7 @@ function! vim_git_backup#git_helper#get_commit_commands(root, file)
     let l:branch_name_command = vim_git_backup#git_helper#get_remote(l:folder, 'rev-parse --abbrev-ref HEAD')
     let l:branch_variable_name = 'branch_name'
     let l:commit_message = 'Repo: ' . l:folder_name . '/' . s:_variable(l:branch_variable_name) . ' - ' . l:file_name
-    let l:commit_command = "commit -m '" . l:commit_message . "'"
+    let l:commit_command = 'commit -m "' . l:commit_message . '"'
 
     let l:branch_name_command = s:_wrap(s:_escape(l:branch_name_command))
 
