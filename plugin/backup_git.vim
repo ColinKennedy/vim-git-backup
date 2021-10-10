@@ -12,11 +12,13 @@ for name in ["diff", "git", "sed", "tac"]
     endif
 endfor
 
-if !get(g:, 'vim_git_backup_shell_separator')
+if empty(get(g:, 'vim_git_backup_shell_separator'))
     let g:vim_git_backup_shell_separator = ' && '
-    let g:vim_git_backup_shell_setter = "%s='%z'"
 endif
 
+if empty(get(g:, 'vim_git_backup_shell_setter'))
+    let g:vim_git_backup_shell_setter = "%s='%z'"
+endif
 
 if has('win32')
     let g:vim_git_backup_is_windows = 1

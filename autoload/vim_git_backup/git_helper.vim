@@ -8,7 +8,7 @@
 " Returns:
 "     str: The escaped text. e.g. "cd /tmp \&\& ls"
 "
-function !s:_escape(text)
+function! s:_escape(text)
     return substitute(a:text, '&', '\\&', 'g')
 endfunction
 
@@ -31,7 +31,7 @@ function! s:_set_command(variable_name, assignee)
     if !g:vim_git_backup_is_windows
         let l:text = substitute(g:vim_git_backup_shell_setter, '%s', a:variable_name, 'g')
 
-        return substitute(l:text, '%z', a:assignee . 'g')
+        return substitute(l:text, '%z', a:assignee, 'g')
     endif
 
     echoerr 'Windows is not supported yet'
@@ -48,7 +48,7 @@ endfunction
 " Returns:
 "     str: The generated variable name. e.g. "$foo".
 "
-function s:_variable(name)
+function! s:_variable(name)
     if !g:vim_git_backup_is_windows
         return '$' . a:name
     endif
@@ -67,7 +67,7 @@ endfunction
 " Returns:
 "     str: The generated command. e.g. "`cd /tmp`".
 "
-function !s:_wrap(command)
+function! s:_wrap(command)
     return '`' . a:command . '`'
 endfunction
 
@@ -120,7 +120,12 @@ function! vim_git_backup#git_helper#get_commit_commands(root, file)
     let l:folder = s:GetGitRoot(a:file)
 
     if l:folder == ""
-        return [vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'Updated: ' . l:file_name)]
+        return [
+        \     vim_git_backup#git_helper#get_remote(
+        \         g:custom_backup_dir,
+        \         "commit -m 'Updated: " . l:file_name . "'"
+        \     )
+        \ ]
     endif
 
     let l:folder_name = fnamemodify(l:folder, ":t")
