@@ -17,7 +17,7 @@ if empty(get(g:, 'vim_git_backup_shell_separator'))
 endif
 
 if empty(get(g:, 'vim_git_backup_shell_setter'))
-    let g:vim_git_backup_shell_setter = "%s='%z'"
+    let g:vim_git_backup_shell_setter = '%s="%z"'
 endif
 
 if has('win32')
