@@ -83,13 +83,21 @@ function! s:BackupCurrentFile()
     let l:file = expand('%:p')  " e.g. '/tmp/foo.txt'
     let l:backup_file = g:custom_backup_dir . l:file  " e.g. '~/.vim_custom_backups/tmp/foo.txt'
     let l:relative_backup_file = vim_git_backup#filer#strip_mount(l:file)  " e.g. 'tmp/foo.txt'
-    let l:file_lines = readfile(l:file)
+
+    try
+        let l:file_lines = readfile(l:file)
+    catch /.*/
+        silent! echoerr 'Cannot read file "' . l:file . '", skipping git backup.'
+
+        return
+    endtry
+
     let l:recommended_note = vim_git_backup#git_helper#get_recommended_note(
     \ l:backup_file,
     \ l:file,
     \ l:file_lines
     \ )
-    
+
     call vim_git_backup#filer#copy(l:file, l:file_lines, g:custom_backup_dir)
 
     let l:commands = []
