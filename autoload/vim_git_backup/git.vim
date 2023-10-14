@@ -1,6 +1,6 @@
 " Create a `git add path` command.
 function! vim_git_backup#git#add(path)
-    return vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'add ' . a:path)
+    return vim_git_backup#git_helper#get_remote(g:custom_backup_dir, 'add ' . a:path . ' --force')
 endfunction
 
 
