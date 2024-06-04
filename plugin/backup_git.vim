@@ -81,6 +81,11 @@ function! s:BackupCurrentFile()
 
     " 1. Backup the file
     let l:file = expand('%:p')  " e.g. '/tmp/foo.txt'
+
+    if l:file =~ '\.git'
+        return
+    endif
+
     let l:backup_file = g:custom_backup_dir . l:file  " e.g. '~/.vim_custom_backups/tmp/foo.txt'
     let l:relative_backup_file = vim_git_backup#filer#strip_mount(l:file)  " e.g. 'tmp/foo.txt'
 
