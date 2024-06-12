@@ -50,7 +50,7 @@ augroup end
 
 let g:custom_backup_dir = get(g:, 'custom_backup_dir', expand("$VIM_CUSTOM_BACKUP_DIRECTORY"))
 
-if !get(g:, 'custom_backup_dir')
+if get(g:, 'custom_backup_dir') is 0
     let g:custom_backup_dir = '~/.vim_custom_backups'
 endif
 

@@ -4,7 +4,7 @@
 "
 " Args:
 "     text (str): The text to escape. e.g. "cd /tmp && ls"
-" 
+"
 " Returns:
 "     str: The escaped text. e.g. "cd /tmp \&\& ls"
 "
@@ -89,7 +89,7 @@ function! s:GetGitRoot(path)
     for part in l:parts
         let l:root = join([''] + parts[:l:length - l:index], '/')
 
-        if finddir('.git', l:root) != ""
+        if finddir('.git', l:root) != "" || findfile('.git', l:root) != ""
             return l:root
         endif
 
@@ -115,7 +115,7 @@ endfunction
 "         The shell commands needed to generate a git commit message.
 "
 function! vim_git_backup#git_helper#get_commit_commands(root, file)
-    let l:file_name = fnamemodify(a:file, ':t')
+    let l:file_name = fnamemodify(a:file, ':.')
 
     let l:folder = s:GetGitRoot(a:file)
 
