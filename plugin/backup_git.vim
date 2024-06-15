@@ -22,7 +22,7 @@ endif
 
 if has('win32') || has("win64")
     let g:vim_git_backup_is_windows = 1
-    let s:PATH_SEPARATOR = '\\'
+    let s:PATH_SEPARATOR = '\'
 else
     let g:vim_git_backup_is_windows = 0
     let s:PATH_SEPARATOR = '/'
