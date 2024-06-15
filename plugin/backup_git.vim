@@ -20,10 +20,12 @@ if empty(get(g:, 'vim_git_backup_shell_setter'))
     let g:vim_git_backup_shell_setter = '%s="%z"'
 endif
 
-if has('win32')
+if has('win32') || has("win64")
     let g:vim_git_backup_is_windows = 1
+    let s:PATH_SEPARATOR = '\\'
 else
     let g:vim_git_backup_is_windows = 0
+    let s:PATH_SEPARATOR = '/'
 endif
 
 
@@ -82,7 +84,7 @@ function! s:BackupCurrentFile()
     " 1. Backup the file
     let l:file = expand('%:p')  " e.g. '/tmp/foo.txt'
 
-    if l:file =~ '\.git'
+    if l:file =~ '\.git' .. s:PATH_SEPARATOR
         return
     endif
 
